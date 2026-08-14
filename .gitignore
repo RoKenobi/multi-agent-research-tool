@@ -1,0 +1,22 @@
+# Secrets
+.env
+
+# last30days skill (cloned separately)
+skills/
+
+# Ephemeral runtime files
+tmp/
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db

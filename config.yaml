@@ -1,0 +1,13 @@
+scheduled_topics:
+  - "Physical AI"
+  - "Embodied AI robotics"
+  - "Vision Language Action models"
+
+vault_path: "C:/Users/mroha/OneDrive/Obsidian"
+
+max_papers: 3
+signal_timeout_sec: 90
+
+last30days_script: "skills/last30days/skills/last30days/scripts/last30days.py"
+last30days_cwd: "skills/last30days"
+last30days_emit: "compact"
