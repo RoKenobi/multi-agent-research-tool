@@ -3,7 +3,7 @@ scheduled_topics:
   - "Embodied AI robotics"
   - "Vision Language Action models"
 
-vault_path: "C:/Users/mroha/OneDrive/Obsidian"
+vault_path: "C:/Coding projects/myGithub/Vault"
 
 max_papers: 3
 # arXiv query clause ANDed onto every paper search; "" to search all fields.
