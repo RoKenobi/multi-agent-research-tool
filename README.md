@@ -50,8 +50,12 @@ Each daily note has fixed sections:
 ### 1. Install dependencies
 
 ```bash
+python -m venv .venv
+.venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+The scheduler automatically uses `.venv` if it exists.
 
 ### 2. Clone the signal skill
 
@@ -98,6 +102,8 @@ Edit `config.yaml`:
 vault_path: "C:/Users/YourName/path/to/your/Obsidian/vault"
 ```
 
+The pipeline stops with a clear error if this folder doesn't exist, so it never writes briefs into a phantom vault.
+
 You can also edit the default research topics here:
 
 ```yaml
@@ -106,6 +112,15 @@ scheduled_topics:
   - "Embodied AI robotics"
   - "Vision Language Action models"
 ```
+
+Other knobs in `config.yaml`:
+
+| Key | Default | What it does |
+|---|---|---|
+| `max_papers` | `3` | Papers fetched per topic |
+| `arxiv_category_filter` | `cat:cs.*` | Keeps short model names like "RT-2" from matching papers in other fields; `""` disables it |
+| `paper_char_budget` | `20000` | Characters of each paper sent to the synthesizer (LaTeX preamble, comments and bibliography are stripped first) |
+| `signal_char_budget` | `12000` | Characters of community signal sent to the synthesizer |
 
 ---
 
@@ -138,7 +153,18 @@ To trigger it manually right now:
 schtasks /run /tn "DeepSignalPipeline"
 ```
 
-Logs are written to `logs/pipeline.log`.
+Logs are written to `logs/pipeline.log`. If one topic fails, the remaining topics still run and the process exits with code 1 so Task Scheduler's "Last Run Result" shows it.
+
+---
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Tests cover the offline logic (LaTeX extraction, entity parsing, response handling, note writing, failure isolation); they make no network or LLM calls.
 
 ---
 

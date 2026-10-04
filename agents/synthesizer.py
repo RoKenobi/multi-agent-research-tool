@@ -1,6 +1,8 @@
 import logging
 from datetime import date
-from langfuse.decorators import observe, langfuse_context
+
+from core.bedrock import complete
+from core.tracing import observe, update_span
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +51,7 @@ Do not just say what it is — say why people care.
 ## The Papers — What They Actually Do
 For each paper write this exact format:
 
-**[[{paper_title_placeholder}]]** — *First Author et al., {year_placeholder}*
+**[[Paper Title]]** — *First Author et al., Year*
 - **In plain English:** (1 sentence — what problem does it solve and how, no jargon)
 - **Why it matters:** (1 sentence — what changes if this works)
 - **The key idea:** (2-3 sentences — explain the core contribution. If there is math, say what the equation is computing in words)
@@ -72,38 +74,36 @@ Not generic advice — specific things to track in the next 2 weeks.
 
 
 @observe(name="synthesizer")
-def run(topic: str, signal: str, papers: list[dict], client, model: str) -> str:
-    papers_block = _format_papers(papers)
+def run(topic: str, signal: str, papers: list[dict], client, model: str, cfg: dict) -> str:
+    today = date.today().isoformat()
 
     if not signal and not papers:
         logger.warning("Synthesizer: no signal and no papers — producing minimal brief")
-        return f"# {topic} — {date.today().isoformat()}\n\n> [!WARNING]\n> No signal or papers retrieved for this topic today. Check Langfuse for details.\n"
+        return f"# {topic} — {today}\n\n> [!WARNING]\n> No signal or papers retrieved for this topic today. Check Langfuse for details.\n"
 
-    response = client.messages.create(
-        model=model,
-        max_tokens=4096,
+    signal_budget = cfg.get("signal_char_budget", 12000)
+    if signal and len(signal) > signal_budget:
+        logger.info("Synthesizer: signal is %d chars, truncating to %d", len(signal), signal_budget)
+
+    output, response = complete(
+        client, model,
+        USER_TEMPLATE.format(
+            date=today,
+            topic=topic,
+            signal=signal[:signal_budget] if signal else "No community signal retrieved.",
+            papers_block=_format_papers(papers),
+        ),
         system=SYSTEM_PROMPT,
-        messages=[{
-            "role": "user",
-            "content": USER_TEMPLATE.format(
-                date=date.today().isoformat(),
-                topic=topic,
-                signal=signal[:4000] if signal else "No community signal retrieved.",
-                papers_block=papers_block,
-                paper_title_placeholder="Paper Title",
-                year_placeholder="Year",
-            ),
-        }],
+        max_tokens=16000,
     )
 
-    output = response.content[0].text
-
-    langfuse_context.update_current_observation(
+    update_span(
         input={"topic": topic, "paper_count": len(papers), "signal_length": len(signal)},
         output=output[:300],
         metadata={
             "input_tokens": response.usage.input_tokens,
             "output_tokens": response.usage.output_tokens,
+            "stop_reason": response.stop_reason,
         },
     )
 
@@ -115,20 +115,27 @@ def run(topic: str, signal: str, papers: list[dict], client, model: str) -> str:
     return output
 
 
+_CONTENT_LABELS = {"latex": "LaTeX source (body)", "pdf_text": "Extracted PDF text"}
+
+
 def _format_papers(papers: list[dict]) -> str:
     if not papers:
         return "No papers retrieved."
 
     blocks = []
     for p in papers:
-        source = p.get("content") or p.get("abstract", "No content available.")
-        label = "LaTeX source" if p.get("content") and "\\begin" in p.get("content", "") else "Abstract / extracted text"
+        content = p.get("content")
+        if content:
+            label = _CONTENT_LABELS.get(p.get("content_type"), "Full text")
+            body = f"**Abstract:** {p.get('abstract', '')}\n\n**{label}:**\n{content}"
+        else:
+            body = f"**Abstract:** {p.get('abstract', 'No abstract available.')}"
         blocks.append(
             f"**Title:** {p['title']}\n"
             f"**Authors:** {', '.join(p['authors'])}\n"
             f"**ArXiv ID:** {p['id']}\n"
             f"**Published:** {p.get('published', 'unknown')}\n"
-            f"**{label}:**\n{source[:4000]}"
+            f"{body}"
         )
 
     return "\n\n---\n\n".join(blocks)
