@@ -66,6 +66,7 @@ def _extract_entities(signal_text: str, client, model: str) -> list[str]:
             EXTRACT_PROMPT.format(signal_text=signal_text[:6000]),
             max_tokens=2048,
             effort="low",
+            name="extract_entities",
         )
         return parse_entity_list(text)
     except Exception as e:

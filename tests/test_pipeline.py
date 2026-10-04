@@ -78,9 +78,9 @@ class FakeClient:
         self.beta = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: response))
 
 
-def _response(blocks, stop_reason="end_turn"):
+def _response(blocks, stop_reason="end_turn", model="claude-opus-5-5"):
     return SimpleNamespace(
-        content=blocks, stop_reason=stop_reason, stop_details=None,
+        content=blocks, stop_reason=stop_reason, stop_details=None, model=model,
         usage=SimpleNamespace(input_tokens=1, output_tokens=2),
     )
 
@@ -173,3 +173,36 @@ def test_complete_request_params_depend_on_model():
     complete(client, "claude-haiku-4-5", "hi", effort="low")
     assert calls[0]["fallbacks"] == "default" and calls[0]["output_config"] == {"effort": "low"}
     assert "fallbacks" not in calls[1] and "output_config" not in calls[1]
+
+
+def test_estimate_cost_uses_list_prices():
+    from core.llm import estimate_cost
+    cost = estimate_cost("claude-opus-5-5", {"input": 1_000_000, "output": 100_000})
+    assert cost == {"input": 4.0, "output": 2.0, "total": 6.0}
+    assert estimate_cost("some-unknown-model", {"input": 1, "output": 1}) is None
+
+
+def test_complete_records_generation_when_tracing_enabled(monkeypatch):
+    import contextlib
+    from core import llm, tracing
+
+    recorded = {}
+
+    class FakeGen:
+        def update(self, **kw):
+            recorded.update(kw)
+
+    @contextlib.contextmanager
+    def fake_generation(name, **kw):
+        recorded.update(name=name, start=kw)
+        yield FakeGen()
+
+    monkeypatch.setattr(llm, "generation", fake_generation)
+    resp = _response([SimpleNamespace(type="text", text="ok")], model="claude-sonnet-5-5")
+    complete(FakeClient(resp), "claude-opus-5-5", "hi", system="sys", name="write_brief")
+
+    assert recorded["name"] == "write_brief"
+    assert recorded["start"]["input"][0] == {"role": "system", "content": "sys"}
+    assert recorded["model"] == "claude-sonnet-5-5"  # the model that actually served it
+    assert recorded["usage_details"] == {"input": 1, "output": 2}
+    assert recorded["cost_details"]["total"] > 0

@@ -44,6 +44,24 @@ def trace_attributes(trace_name: str, metadata: dict[str, str]):
     return contextlib.nullcontext()
 
 
+class _NoopGeneration:
+    def update(self, **kwargs) -> None:
+        pass
+
+
+@contextlib.contextmanager
+def generation(name: str, **kwargs):
+    """Record an LLM call as a Langfuse generation (model, prompt, output, tokens, cost).
+
+    Yields an object with .update(...); a no-op stand-in when tracing is disabled.
+    """
+    if not _enabled:
+        yield _NoopGeneration()
+        return
+    with get_client().start_as_current_observation(name=name, as_type="generation", **kwargs) as gen:
+        yield gen
+
+
 def update_span(**kwargs) -> None:
     """Attach input/output/metadata to the current observation (no-op when disabled)."""
     if _enabled:

@@ -96,16 +96,12 @@ def run(topic: str, signal: str, papers: list[dict], client, model: str, cfg: di
         system=SYSTEM_PROMPT,
         max_tokens=16000,
         effort="high",
+        name="write_brief",
     )
 
     update_span(
         input={"topic": topic, "paper_count": len(papers), "signal_length": len(signal)},
         output=output[:300],
-        metadata={
-            "input_tokens": response.usage.input_tokens,
-            "output_tokens": response.usage.output_tokens,
-            "stop_reason": response.stop_reason,
-        },
     )
 
     logger.info(
