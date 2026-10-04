@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from core.config import load_env, load_config
-from core.bedrock import create_client
+from core.llm import create_client
 from core.tracing import init_langfuse, flush, observe, trace_attributes, update_span
 from core.obsidian import write_brief
 from agents import signal_agent, arxiv_agent, synthesizer

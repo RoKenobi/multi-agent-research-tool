@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pipeline
 from agents import arxiv_agent, synthesizer
 from agents.arxiv_agent import clean_latex, extract_main_tex, parse_entity_list
-from core.bedrock import LLMRefusalError, complete
+from core.llm import LLMRefusalError, complete
 from core.obsidian import write_brief
 
 BODY = "We propose a method. " * 40 + r"$$ L = \sum_i \ell(x_i) $$ costs 5\% less."
@@ -75,7 +75,7 @@ def test_extract_main_tex_rejects_pdf_and_respects_budget():
 
 class FakeClient:
     def __init__(self, response):
-        self.messages = SimpleNamespace(create=lambda **kw: response)
+        self.beta = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: response))
 
 
 def _response(blocks, stop_reason="end_turn"):
@@ -106,7 +106,7 @@ def test_synthesizer_prompt_includes_paper_body():
         seen.update(kw)
         return _response([SimpleNamespace(type="text", text="# brief")])
 
-    client = SimpleNamespace(messages=SimpleNamespace(create=create))
+    client = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(create=create)))
     paper = {"title": "T", "authors": ["A"], "id": "1", "abstract": "abs",
              "content": "X" * 10000 + "FORMULA", "content_type": "latex"}
     out = synthesizer.run("Topic", "signal", [paper], client, "m", {})
@@ -159,3 +159,17 @@ def test_extract_main_tex_inlines_section_files():
     raw = _tar_gz({"./main.tex": main, "./sections/intro.tex": BODY, "./sections/unused.tex": "NOPE" * 200})
     out = extract_main_tex(raw, 20000)
     assert out.startswith("We propose") and "NOPE" not in out
+
+
+def test_complete_request_params_depend_on_model():
+    calls = []
+
+    def create(**kw):
+        calls.append(kw)
+        return _response([SimpleNamespace(type="text", text="ok")])
+
+    client = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(create=create)))
+    complete(client, "claude-opus-5-5", "hi", effort="low")
+    complete(client, "claude-haiku-4-5", "hi", effort="low")
+    assert calls[0]["fallbacks"] == "default" and calls[0]["output_config"] == {"effort": "low"}
+    assert "fallbacks" not in calls[1] and "output_config" not in calls[1]

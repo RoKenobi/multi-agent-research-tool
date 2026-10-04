@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from core.bedrock import complete
+from core.llm import complete
 from core.tracing import observe, update_span
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,7 @@ def run(topic: str, signal: str, papers: list[dict], client, model: str, cfg: di
         ),
         system=SYSTEM_PROMPT,
         max_tokens=16000,
+        effort="high",
     )
 
     update_span(

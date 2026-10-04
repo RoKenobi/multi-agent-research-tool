@@ -78,10 +78,10 @@ cp .env.example .env
 Fill in `.env`:
 
 ```env
-# Required
-AWS_BEARER_TOKEN_BEDROCK=your_token
-AWS_REGION=us-east-1
-ANTHROPIC_MODEL=us.anthropic.claude-sonnet-5-20251101-v1:0
+# Required — from console.anthropic.com
+ANTHROPIC_API_KEY=sk-ant-...
+# Optional — defaults to claude-opus-5-5 (e.g. claude-sonnet-5-5 to cut cost)
+ANTHROPIC_MODEL=
 
 # Langfuse — free account at cloud.langfuse.com
 LANGFUSE_PUBLIC_KEY=pk-lf-...
@@ -174,7 +174,7 @@ Tests cover the offline logic (LaTeX extraction, entity parsing, response handli
 |---|---|
 | Signal discovery | [mvanhorn/last30days-skill](https://github.com/mvanhorn/last30days-skill) |
 | Academic papers | ArXiv API + LaTeX source download |
-| LLM synthesis | Claude via AWS Bedrock |
+| LLM synthesis | Claude via the Anthropic API |
 | Observability | [Langfuse](https://langfuse.com) |
 | Output | Local Obsidian vault (.md files) |
 | Scheduler | Windows Task Scheduler |

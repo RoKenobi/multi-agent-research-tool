@@ -8,7 +8,6 @@ ROOT = Path(__file__).parent.parent
 
 def load_env() -> None:
     load_dotenv(ROOT / ".env")
-    os.environ.setdefault("AWS_REGION", "us-east-1")
 
 
 def load_config() -> dict:

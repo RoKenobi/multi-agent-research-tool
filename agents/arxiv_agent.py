@@ -10,7 +10,7 @@ import urllib.request
 import arxiv
 import pymupdf  # PDF fallback
 
-from core.bedrock import complete
+from core.llm import complete
 from core.tracing import observe, update_span
 
 logger = logging.getLogger(__name__)
@@ -65,6 +65,7 @@ def _extract_entities(signal_text: str, client, model: str) -> list[str]:
             client, model,
             EXTRACT_PROMPT.format(signal_text=signal_text[:6000]),
             max_tokens=2048,
+            effort="low",
         )
         return parse_entity_list(text)
     except Exception as e:
