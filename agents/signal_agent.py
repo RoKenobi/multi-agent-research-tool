@@ -3,7 +3,7 @@ import sys
 import subprocess
 import logging
 from pathlib import Path
-from langfuse.decorators import observe, langfuse_context
+from core.tracing import observe, update_span
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def run(topic: str, cfg: dict) -> str:
             "  cd last30days && uv sync",
             script,
         )
-        langfuse_context.update_current_observation(
+        update_span(
             metadata={"error": "script_not_found", "path": str(script)}
         )
         return ""
@@ -46,20 +46,20 @@ def run(topic: str, cfg: dict) -> str:
         )
     except subprocess.TimeoutExpired:
         logger.warning("Signal Agent timed out for topic '%s'", topic)
-        langfuse_context.update_current_observation(
+        update_span(
             metadata={"error": "timeout", "topic": topic}
         )
         return ""
 
     if result.returncode != 0:
         logger.warning("Signal Agent returned non-zero exit for '%s': %s", topic, result.stderr[:300])
-        langfuse_context.update_current_observation(
+        update_span(
             metadata={"error": result.stderr[:500], "return_code": result.returncode}
         )
         return ""
 
     output = result.stdout.strip()
-    langfuse_context.update_current_observation(
+    update_span(
         input={"topic": topic},
         output=output[:500],
         metadata={"output_length": len(output)},

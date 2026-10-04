@@ -3,10 +3,17 @@ scheduled_topics:
   - "Embodied AI robotics"
   - "Vision Language Action models"
 
-vault_path: "C:/Users/mroha/OneDrive/Obsidian"
+vault_path: "C:/Coding projects/myGithub/Vault"
 
 max_papers: 3
+# arXiv query clause ANDed onto every paper search; "" to search all fields.
+arxiv_category_filter: "cat:cs.*"
 signal_timeout_sec: 90
+
+# How much text goes to the synthesizer (characters). LaTeX preamble, comments
+# and bibliography are stripped first, so this is spent on the paper body.
+paper_char_budget: 20000
+signal_char_budget: 12000
 
 last30days_script: "skills/last30days/skills/last30days/scripts/last30days.py"
 last30days_cwd: "skills/last30days"

@@ -2,6 +2,8 @@
 
 ## 1. Install Python dependencies
 ```
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -19,7 +21,7 @@ cd ../..
 copy .env.example .env
 ```
 Fill in your `.env`:
-- `AWS_BEARER_TOKEN_BEDROCK` — your Bedrock token
+- `ANTHROPIC_API_KEY` — from console.anthropic.com (optionally `ANTHROPIC_MODEL`; defaults to `claude-opus-5-5`)
 - `LANGFUSE_PUBLIC_KEY` + `LANGFUSE_SECRET_KEY` — from cloud.langfuse.com (free account)
 - Optional: `XAI_API_KEY`, `GOOGLE_API_KEY`, `BRAVE_API_KEY` for richer signal
 

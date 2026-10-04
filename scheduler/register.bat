@@ -2,7 +2,7 @@
 echo Registering Deep Signal daily task at 08:00...
 schtasks /create ^
   /tn "DeepSignalPipeline" ^
-  /tr "\"C:\Coding projects\myGithub\Personal_use\multi_agent_research_tool\scheduler\run.bat\"" ^
+  /tr "\"%~dp0run.bat\"" ^
   /sc daily ^
   /st 08:00 ^
   /ru %USERNAME% ^

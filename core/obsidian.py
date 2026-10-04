@@ -9,7 +9,7 @@ def write_brief(content: str, topic: str, cfg: dict) -> Path:
     today = date.today().isoformat()
 
     slug = re.sub(r"[^\w\s-]", "", topic.lower()).strip()
-    slug = re.sub(r"[\s]+", "-", slug)
+    slug = re.sub(r"[\s]+", "-", slug) or "untitled"
 
     folder = vault / "Deep Signal" / slug
     folder.mkdir(parents=True, exist_ok=True)
