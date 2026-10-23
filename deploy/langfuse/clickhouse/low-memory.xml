@@ -1,0 +1,16 @@
+<!-- Trim ClickHouse for a single-user Langfuse (see Altinity low-memory KB).
+     Don't lower background_pool_size: ClickHouse 25.x refuses to start when it is
+     below its merge-tree pool thresholds. -->
+<clickhouse>
+    <mark_cache_size>268435456</mark_cache_size>
+    <index_mark_cache_size>67108864</index_mark_cache_size>
+    <uncompressed_cache_size>16777216</uncompressed_cache_size>
+    <max_server_memory_usage_to_ram_ratio>0.75</max_server_memory_usage_to_ram_ratio>
+    <trace_log remove="1"/>
+    <text_log remove="1"/>
+    <metric_log remove="1"/>
+    <asynchronous_metric_log remove="1"/>
+    <query_thread_log remove="1"/>
+    <processors_profile_log remove="1"/>
+    <part_log remove="1"/>
+</clickhouse>

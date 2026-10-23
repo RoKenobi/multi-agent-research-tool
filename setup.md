@@ -22,7 +22,7 @@ copy .env.example .env
 ```
 Fill in your `.env`:
 - `ANTHROPIC_API_KEY` — from console.anthropic.com (optionally `ANTHROPIC_MODEL`; defaults to `claude-opus-5-5`)
-- `LANGFUSE_PUBLIC_KEY` + `LANGFUSE_SECRET_KEY` — from cloud.langfuse.com (free account)
+- `LANGFUSE_PUBLIC_KEY` + `LANGFUSE_SECRET_KEY` + `LANGFUSE_HOST` — from your self-hosted Langfuse (see "Self-hosting Langfuse" in the README), or from a free cloud.langfuse.com account with `LANGFUSE_HOST=https://cloud.langfuse.com`
 - Optional: `XAI_API_KEY`, `GOOGLE_API_KEY`, `BRAVE_API_KEY` for richer signal
 
 ## 4. Set your Obsidian vault path in config.yaml

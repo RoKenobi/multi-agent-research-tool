@@ -1,0 +1,11 @@
+# Local tweaks on top of the upstream docker-compose.yml (keep that file pristine
+# so it can be re-downloaded on upgrade).
+services:
+  clickhouse:
+    mem_limit: 3g
+    volumes:
+      - ./clickhouse/low-memory.xml:/etc/clickhouse-server/config.d/low-memory.xml:ro
+  langfuse-web:
+    environment:
+      # Single-user instance: only the account created via LANGFUSE_INIT_* can log in
+      AUTH_DISABLE_SIGNUP: "true"
