@@ -1,6 +1,6 @@
 # Embodied AI Research Assistant: design
 
-Date: 2026-10-23 · Branch: `wbc-research-assistant`
+Date: 2026-10-23 · Branch: `research-assistant`
 
 ## Intent
 
@@ -61,7 +61,7 @@ branch. The old tool stays on `master`.
 
 ## Constraints
 
-- Same repo, branch `wbc-research-assistant`. Reuse `core/`:
+- Same repo, branch `research-assistant`. Reuse `core/`:
   `llm.py` (Claude client, effort, fallbacks, cost), `tracing.py` (Langfuse),
   `obsidian.py`, `config.py`. Reuse the LaTeX/PDF extraction in
   `agents/arxiv_agent.py` (`extract_main_tex`, `clean_latex`,
