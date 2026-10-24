@@ -71,7 +71,28 @@ branch. The old tool stays on `master`.
   `multi-agent-research-tool`). Tracing must stay optional: if the server is
   unreachable the run continues (existing `core/tracing.py` behaviour).
 - Output lands in the Obsidian vault (`vault_path` in `config.yaml`).
-- Windows host, Python 3.12, Anthropic API.
+- Windows host, Python 3.12.
+- **No Anthropic API key.** The user pays through their Claude plan, so every
+  LLM call goes through the Claude Code CLI in headless mode
+  (`claude -p --output-format json`), which uses the plan's login. Verified
+  2026-10-24 with CLI 2.1.309: JSON output carries `result`, `is_error`,
+  `usage` (input/output/cache tokens) and `total_cost_usd`.
+  - `core/llm.py` keeps its interface but swaps the Anthropic SDK for a
+    subprocess call to `claude -p`. Pass `--system-prompt` (replaces Claude
+    Code's large default prompt, which otherwise inflates every call),
+    `--tools ""` (agents get text in, text out; Python does all fetching),
+    `--no-session-persistence`, `--model`, `--effort`.
+  - Calls run sequentially or with low concurrency (config, default 2) to
+    stay within plan rate limits; on a usage-limit error the run stops
+    cleanly and keeps everything written so far (the next run resumes via
+    the index).
+  - Langfuse still records each call as a generation with token usage.
+    `total_cost_usd` is an API-equivalent estimate, not a bill; label it so.
+- **Lab context, used for relevance and feasibility:** robots are **Unitree
+  G1** and **AgiBot X2** (either); simulator is **MuJoCo** by default but not
+  fixed. The tool must not treat other simulators as irrelevant, only rank
+  G1/X2 and MuJoCo-compatible work slightly higher and note sim portability in
+  feasibility.
 
 ## Architecture (decided in conversation)
 
@@ -155,8 +176,10 @@ needs real robot, rough effort), rank.
   higher rate limits.
 - **arXiv scoping:** default `cat:cs.RO OR cat:cs.LG OR cat:cs.AI OR cat:cs.CV`
   (embodied AI lives mostly in robotics and ML), configurable.
-- **Models:** low effort for query generation and ranking; full model
-  (`ANTHROPIC_MODEL`, default Opus 5.5) for Reader, Ideas and Critic.
+- **Models (via `claude -p --model`):** `claude-sonnet-5-5` at low effort for
+  query generation and ranking; `claude-opus-5-5` for Reader, Ideas and
+  Critic. Both configurable in `config.yaml`; `ANTHROPIC_API_KEY` is no longer
+  used.
 - **Ideas agent input stays bounded:** it reads a compact digest per paper
   (problem, approach, setup, limitations, future work, relevance) plus the gap
   map, not full notes, so a topic can grow to hundreds of papers.
@@ -170,9 +193,8 @@ Prompt wording, ranking heuristics, exact Langfuse span names, how the gap map
 table is merged across runs, topic-slug rules, test layout (keep the existing
 no-network test style).
 
-## Open questions for the user
+## Answered by the user (2026-10-24)
 
-- Which robot/simulator does the lab use? Used to rank relevance and judge
-  feasibility (e.g. Unitree G1 in Isaac Lab).
-- Rough spend you're comfortable with per run (a 15-paper run on Opus is
-  likely a few dollars, not yet measured).
+- Robots: Unitree G1 or AgiBot X2. Simulator: MuJoCo, but it can change.
+- Budget: no API key; runs use the user's Claude plan through Claude Code.
+  The per-run paper cap and loop cap are what keep a run within plan limits.
